@@ -1,27 +1,23 @@
-
 import dotenv from "dotenv";
-import { connectDB } from './config/db.js';
+import { connectDB } from "./config/db.js";
 import express from "express";
 import fetch from "node-fetch";
-import rake from "node-rake";
 import spyder from "./spyder.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
-
-
-import authRoutes from './routes/auth.js';
-
+import authRoutes from "./routes/auth.js";
+import rateLimit from "express-rate-limit";
+import cors from "cors";
 dotenv.config();
 await connectDB();
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 3000;
 const SERPER_API_KEY = process.env.SERPER_KEY;
 
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash", 
+  model: "gemini-2.5-flash",
   generationConfig: {
     responseMimeType: "application/json",
   },
@@ -29,14 +25,34 @@ const model = genAI.getGenerativeModel({
 
 app.use(express.json());
 
-const extractKeywords = (text) => {
-  const keywords = rake.generate(text);
-  return keywords.join(" ") || "";
-};
+// const extractKeywords = (text) => {
+//   const keywords = rake.generate(text);
+//   return keywords.join(" ") || "";
+// };
 
-app.use('/api/auth', authRoutes); 
+app.use("/api/auth", authRoutes);
 
-app.post("/search", async (req, res) => {
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 1,
+  message: {
+    error: "Too many requests, please try again after a minute.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post("/hlo", searchLimiter, async (req, res) => {
+  const { query } = req.body;
+
+  if (!query) {
+    return res.status(400).json({ error: "Search query is required." });
+  }
+  res.status(200).json({ youSend: query });
+  console.log("send");
+});
+
+app.post("/search", searchLimiter, async (req, res) => {
   const { query } = req.body;
 
   if (!query) {
@@ -46,24 +62,27 @@ app.post("/search", async (req, res) => {
   let keyword = query;
   keyword = keyword + " news articles only";
   console.log(`Searching Google for: "${keyword}"`);
-  
 
   try {
     const url = "https://google.serper.dev/search";
     const apiResponse = await fetch(url, {
       method: "POST",
-      headers: { "X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json" },
+      headers: {
+        "X-API-KEY": SERPER_API_KEY,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ q: keyword }),
     });
 
-    if (!apiResponse.ok) throw new Error(`API call failed: ${apiResponse.status}`);
+    if (!apiResponse.ok)
+      throw new Error(`API call failed: ${apiResponse.status}`);
     const data = await apiResponse.json();
-    
-    
-    const topSources = data.organic?.slice(0, 3).map((item) => ({
-      link: item.link,
-      name: new URL(item.link).hostname.replace('www.', ''), 
-    })) || []
+
+    const topSources =
+      data.organic?.slice(0, 3).map((item) => ({
+        link: item.link,
+        name: new URL(item.link).hostname.replace("www.", ""),
+      })) || [];
     console.log(topSources);
 
     console.log(`Found ${topSources.length} URLs to scrape.`);
@@ -78,15 +97,18 @@ app.post("/search", async (req, res) => {
       })
     );
 
-    const validScrapes = scrapedResults.filter(result => result.data);
+    const validScrapes = scrapedResults.filter((result) => result.data);
     if (validScrapes.length === 0) {
       return res.status(400).json({ error: "Could not retrieve content." });
     }
 
     const combinedText = validScrapes
-      .map((result, index) => `--- Article ${index + 1} from ${result.name} ---\n${result.data}`)
+      .map(
+        (result, index) =>
+          `--- Article ${index + 1} from ${result.name} ---\n${result.data}`
+      )
       .join("\n\n");
-   
+
     const prompt = `
       You are a fact-checking news analyst. Your task is to analyze the following articles and provide a structured JSON response.
       
@@ -110,24 +132,26 @@ app.post("/search", async (req, res) => {
       Here are the articles:
       ${combinedText}
     `;
-    
+
     console.log("Sending content to AI for analysis...");
     const aiResult = await model.generateContent(prompt);
     const response = await aiResult.response;
     const analysisText = response.text();
 
-   
     try {
       const analysisJson = JSON.parse(analysisText);
       res.status(200).json(analysisJson);
+      console.log(analysisJson.stringify());
+      console.log("Finish");
     } catch (parseError) {
       console.error("Failed to parse JSON response from AI:", analysisText);
       throw new Error("AI returned malformed data.");
     }
-
   } catch (error) {
     console.error("Error during search:", error);
-    res.status(500).json({ error: "Failed to fetch or process search results." });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch or process search results." });
   }
 });
 
