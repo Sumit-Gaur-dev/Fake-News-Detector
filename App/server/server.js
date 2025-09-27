@@ -25,15 +25,10 @@ const model = genAI.getGenerativeModel({
 
 app.use(express.json());
 
-// const extractKeywords = (text) => {
-//   const keywords = rake.generate(text);
-//   return keywords.join(" ") || "";
-// };
-
 app.use("/api/auth", authRoutes);
 
 const searchLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 1,
   message: {
     error: "Too many requests, please try again after a minute.",
@@ -58,7 +53,7 @@ app.post("/search", searchLimiter, async (req, res) => {
   if (!query) {
     return res.status(400).json({ error: "Search query is required." });
   }
-  // let keyword = extractKeywords(query);
+
   let keyword = query;
   keyword = keyword + " news articles only";
   console.log(`Searching Google for: "${keyword}"`);
@@ -112,7 +107,8 @@ app.post("/search", searchLimiter, async (req, res) => {
     const prompt = `
       You are a fact-checking news analyst. Your task is to analyze the following articles and provide a structured JSON response.
       
-      Based ONLY on the provided articles, perform the following actions:
+      take the reference of the article provided articles, perform the following actions:
+      1. Give True,False,Fabricated at the beginnning of the summarized result.
       1. Write a concise, neutral overall summary of the topic.
       2. Assign an overall reliability score from 0 to 100 based on the consistency and evidence in the articles. 
       3. For each individual source article, provide a brief summary of its key points and assign it an individual reliability score from 0 to 100.

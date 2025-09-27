@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdOutlineShield } from "react-icons/md";
-import { CiAt } from "react-icons/ci";
+import { CiAt, CiEdit } from "react-icons/ci";
 import { FaLock } from "react-icons/fa";
 import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../store/features/LoginSlice";
 
 const SpinnerIcon = () => (
   <svg
@@ -28,23 +30,32 @@ const SpinnerIcon = () => (
 );
 
 function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const { token, isAuthenticated } = useSelector((state) => state.login);
+
+  const dispatch = useDispatch();
+
+  const info = useSelector((state) => state.login);
   const navigate = useNavigate();
+  const [clicked, setClicked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setIsLoading(true);
-    // Simulate a network request
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/home");
-      alert("LoginSuccessful");
-    }, 2000);
+    dispatch(loginUser({ email, password }));
+    console.log(email, password);
+    navigate("/home");
   };
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/home");
+    }
+  }, [isAuthenticated]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-900 text-gray-300">
-      {/* Background Gradient Shapes */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000"></div>
@@ -60,7 +71,6 @@ function LoginPage() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Email Input */}
           <div className="relative">
             <label className="text-sm font-medium text-gray-400">Email</label>
             <div className="relative mt-2">
@@ -70,6 +80,10 @@ function LoginPage() {
               <input
                 type="email"
                 name="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                }}
                 placeholder="you@example.com"
                 required
                 autoFocus
@@ -78,7 +92,6 @@ function LoginPage() {
             </div>
           </div>
 
-          {/* Password Input */}
           <div className="relative">
             <label className="text-sm font-medium text-gray-400">
               Password
@@ -90,6 +103,10 @@ function LoginPage() {
               <input
                 type="password"
                 name="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
                 placeholder="enter password"
                 required
                 className="w-full pl-10 pr-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition duration-300"
@@ -97,13 +114,6 @@ function LoginPage() {
             </div>
           </div>
 
-          <div className="text-right">
-            <a href="#" className="text-sm text-purple-400 hover:underline">
-              Forgot password?
-            </a>
-          </div>
-
-          {/* Submit Button */}
           <div>
             <button
               type="submit"
@@ -117,7 +127,10 @@ function LoginPage() {
 
         <p className="text-center text-sm text-gray-400">
           Don't have an account?{" "}
-          <a href="#" className="font-medium text-purple-400 hover:underline">
+          <a
+            href="/signup"
+            className="font-medium text-purple-400 hover:underline"
+          >
             Sign up
           </a>
         </p>

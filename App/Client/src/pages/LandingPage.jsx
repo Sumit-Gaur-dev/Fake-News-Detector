@@ -4,7 +4,6 @@ import { IoMdDocument } from "react-icons/io";
 import { FaSearchLocation } from "react-icons/fa";
 import { useNavigate } from "react-router";
 
-// --- Loading Animation Component ---
 const LoadingAnimation = () => {
   return (
     <div className="fixed inset-0 bg-[#0D1117] flex justify-center items-center z-50 animate-fadeOut">
@@ -22,12 +21,10 @@ function LandingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate a loading time (e.g., 3.5 seconds)
     const timer = setTimeout(() => {
       setLoading(false);
     }, 3500);
 
-    // Cleanup the timer if the component unmounts
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,14 +34,12 @@ function LandingPage() {
 
   return (
     <div className="bg-[#0D1117] text-gray-200 min-h-screen font-sans animate-fadeIn">
-      {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000"></div>
       </div>
 
       <div className="relative z-10">
-        {/* Navbar */}
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-white">
             TruthLens <span className="text-purple-400">AI</span>
@@ -54,7 +49,7 @@ function LandingPage() {
             <button
               className="text-white hover:text-gray-300 transition duration-300"
               onClick={() => {
-                navigate("/login"); // Changed to navigate to /login
+                navigate("/login");
               }}
             >
               Login
@@ -70,7 +65,6 @@ function LandingPage() {
           </div>
         </nav>
 
-        {/* Hero Section */}
         <header className="container mx-auto px-6 py-24 text-center">
           <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4">
             Navigate the World of Information with{" "}
@@ -83,19 +77,14 @@ function LandingPage() {
             reliable source recommendations to combat misinformation. Make
             informed decisions, effortlessly.
           </p>
-          <button className="bg-gradient-to-r from-purple-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
-            Get Started
-          </button>
         </header>
 
-        {/* Features Section */}
         <section id="features" className="py-20">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center text-white mb-12">
               Why Choose TruthLens AI?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Feature Card 1: Fake News Detector */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 p-8 rounded-2xl text-center shadow-lg hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-2">
                 <div className="inline-block bg-purple-500/20 text-purple-400 p-4 rounded-full mb-4">
                   <FaCheckCircle size={24} />
@@ -110,7 +99,6 @@ function LandingPage() {
                 </p>
               </div>
 
-              {/* Feature Card 2: AI Summarizer */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-blue-500/30 p-8 rounded-2xl text-center shadow-lg hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2">
                 <div className="inline-block bg-blue-500/20 text-blue-400 p-4 rounded-full mb-4">
                   <IoMdDocument size={24} />
@@ -125,7 +113,6 @@ function LandingPage() {
                 </p>
               </div>
 
-              {/* Feature Card 3: Source Recommendation */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-green-500/30 p-8 rounded-2xl text-center shadow-lg hover:border-green-500 transition-all duration-300 transform hover:-translate-y-2">
                 <div className="inline-block bg-green-500/20 text-green-400 p-4 rounded-full mb-4">
                   <FaSearchLocation size={24} />
@@ -142,10 +129,9 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* Footer */}
         <footer className="border-t border-gray-800 mt-20">
           <div className="container mx-auto px-6 py-8 text-center text-gray-500">
-            <p>&copy; made with love ❤ bug berner.</p>
+            <p>&copy; made with love ❤ bugbarner.</p>
           </div>
         </footer>
       </div>

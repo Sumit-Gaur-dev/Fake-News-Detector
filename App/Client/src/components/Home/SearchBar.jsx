@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { fetchData } from "../../store/features/homeDataSlice";
 export default function SearchBar() {
   const [message, setMessage] = useState("");
@@ -9,20 +9,23 @@ export default function SearchBar() {
   const dispatch = useDispatch();
 
   const messageSender = () => {
-    setSent(true);
+    setMessage("");
     if (message.length < 10) {
       alert("Too short prompt");
       setMessage("");
       return null;
     }
     dispatch(fetchData(message));
+    setTimeout(() => {
+      setSent(true);
+    }, 15000);
   };
 
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "auto"; // reset
-      textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px"; // max 160px (~8 lines)
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px";
     }
   }, [message]);
 
@@ -33,17 +36,14 @@ export default function SearchBar() {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Ask a follow-up question..."
-        // Added 'custom-scrollbar' class and increased right padding
         className="custom-scrollbar w-full pr-14 resize-none overflow-y-auto max-h-40 bg-slate-800/70 text-gray-200 rounded-xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 border border-transparent focus:border-transparent"
         rows={1}
       />
 
-      {/* Send button */}
       <button
         onClick={messageSender}
-        // Changed position from right-6 to right-8
         className={`${
-          sent ? "cursor-none invisible" : "cursor-pointer"
+          sent ? "cursor-none invisible" : "cursor-pointer visible"
         } absolute right-8 bottom-6 text-purple-400 hover:text-purple-300 hover:scale-110 transition-all duration-200`}
       >
         <FiSend size={24} />

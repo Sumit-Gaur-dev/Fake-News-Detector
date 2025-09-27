@@ -1,27 +1,22 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// You can place this helper in a shared file, e.g., 'utils/api.js'
-const apiCall = async (url, body) => {
-  const response = await fetch(`/api/auth${url}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Something went wrong");
-  }
-  return response.json();
-};
-
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const data = await apiCall("/login", { email, password });
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(data.message || "Login failed");
+      }
       localStorage.setItem("token", data.token);
       return data;
     } catch (error) {
@@ -31,52 +26,48 @@ export const loginUser = createAsyncThunk(
 );
 
 const initialState = {
-  user: null,
+  loading: false,
   token: localStorage.getItem("token") || null,
-  top3ChatIds: [],
-  isAuthenticated: !!localStorage.getItem("token"),
-  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
+  message: null,
+  isAuthenticated: !!localStorage.getItem("token"),
 };
 
-export const loginSlice = createSlice({
-  name: "auth", // This name defines the state key: state.auth
+const LoginSlice = createSlice({
+  name: "auth",
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.top3ChatIds = [];
-      state.isAuthenticated = false;
-      state.status = "idle";
-      state.error = null;
       localStorage.removeItem("token");
+      state.loading = false;
+      state.token = null;
+      state.error = null;
+      state.message = null;
+      state.isAuthenticated = false;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.pending, (state) => {
-        state.status = "loading";
+        state.loading = true;
         state.error = null;
+        state.message = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.status = "succeeded";
+        state.loading = false;
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.user = {
-          username: action.payload.username,
-          email: action.payload.email,
-        };
-        state.top3ChatIds = action.payload.top3ChatIds;
+        state.message = action.payload.message;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        state.status = "failed";
+        state.loading = false;
         state.isAuthenticated = false;
+        state.token = null;
         state.error = action.payload;
       });
   },
 });
 
-export const { logout } = loginSlice.actions;
+export const { logout } = LoginSlice.actions;
 
-export default loginSlice.reducer;
+export default LoginSlice.reducer;

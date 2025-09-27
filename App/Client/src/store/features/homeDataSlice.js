@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Async thunk
 export const fetchData = createAsyncThunk(
   "aiData/fetchData",
   async (requestBody, thunkAPI) => {
@@ -10,7 +9,7 @@ export const fetchData = createAsyncThunk(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: requestBody }), // wrap as { query: "..." } if backend expects that
+        body: JSON.stringify({ query: requestBody }),
       });
 
       if (!response.ok) {
@@ -19,14 +18,13 @@ export const fetchData = createAsyncThunk(
       }
 
       const data = await response.json();
-      return data; // This is already shaped like initialState
+      return data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
 
-// Initial state
 const initialState = {
   summary: "",
   score: 0,
@@ -36,11 +34,13 @@ const initialState = {
   error: null,
 };
 
-// Slice
 export const homeDataSlice = createSlice({
   name: "aiData",
   initialState,
-  reducers: {},
+
+  reducers: {
+    resetState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchData.pending, (state) => {
@@ -48,8 +48,7 @@ export const homeDataSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchData.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        // Replace state with server response
+        state.status = "received";
         state.summary = action.payload.summary;
         state.score = action.payload.score;
         state.graphScore = action.payload.graphScore;
@@ -61,5 +60,7 @@ export const homeDataSlice = createSlice({
       });
   },
 });
+
+export const { resetState } = homeDataSlice.actions;
 
 export default homeDataSlice.reducer;
